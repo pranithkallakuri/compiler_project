@@ -259,10 +259,11 @@ class Tokenizer:
                 if self.fp+1 < len(chars) and chr(chars[self.fp+1]).isdigit():
                     return self.state, is_final_state
                 else:
-                    if chr(chars[self.fp+1] == ord('.')):
+                    if chr(chars[self.fp+1]) == ord('.'):
                         self.state = "float0"
                         return self.state, is_final_state
                     else:
+                        self.state = "integer_literal"
                         is_final_state = True
                         return self.state, is_final_state
             elif char == ord('0'):
