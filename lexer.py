@@ -19,4 +19,4 @@ print()
 print()
 
 for token in my_token_list:
-    print("< " + token.token + ", " + token.lexeme + " >")
+    print("< " + token.token + ", " + token.lexeme + " >  b/w indices " + str(token.begin) + " to " + str(token.end) + " on line number " + str(token.line))

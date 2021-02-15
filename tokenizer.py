@@ -3,9 +3,15 @@
 class Token:
     token = ""
     lexeme = ""
-    def __init__(self, token_type, lexeme):
+    begin = 0
+    end = 0
+    line = 0
+    def __init__(self, token_type, lexeme, begin, end, line):
         self.token = token_type
         self.lexeme = lexeme
+        self.begin = begin
+        self.end = end
+        self.line = line
 
 class Tokenizer:
     in_singleline_comment = False
@@ -68,7 +74,8 @@ class Tokenizer:
             if self.in_singleline_comment:
                 return
             if is_final_state and not self.in_multiline_comment:
-                self.token_list.append(Token(self.state, str(''.join(chr(chars[i]) for i in range(self.lb, self.fp+1)))))
+                lexeme_ = str(''.join(chr(chars[i]) for i in range(self.lb, self.fp+1)))
+                self.token_list.append(Token(self.state, lexeme_, self.lb, self.fp, line_number))
                 self.previous_final_state = self.state
                 is_final_state = False
                 self.state = "start"
