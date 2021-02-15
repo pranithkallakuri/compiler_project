@@ -254,18 +254,23 @@ class Tokenizer:
         
         elif self.state == "int0":
             print("inhere5")
+            print("char = " + str(chr(char)))
             if chr(char).isdigit() and not char == ord('0'):
+                print("inhere5->1")
                 self.state = "intf1"
                 if self.fp+1 < len(chars) and chr(chars[self.fp+1]).isdigit():
                     return self.state, is_final_state
                 else:
-                    if chr(chars[self.fp+1]) == ord('.'):
-                        self.state = "float0"
+                    print(chars[self.fp+1] == ord('.'))
+                    if chars[self.fp+1] == ord('.'):
                         return self.state, is_final_state
                     else:
                         self.state = "integer_literal"
                         is_final_state = True
                         return self.state, is_final_state
+            elif char == ord('.'):
+                self.state = "float0"
+                return self.state, is_final_state
             elif char == ord('0'):
                 self.state = "int1"
                 return self.state, is_final_state
