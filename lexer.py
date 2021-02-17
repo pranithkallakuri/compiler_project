@@ -10,13 +10,15 @@ if len(sys.argv) < 2:
     exit()
 
 
-my_tokenizer = Tokenizer()
-my_token_list = my_tokenizer.get_token_list(sys.argv[1])
+my_tokenizer = Tokenizer(sys.argv[1])
 
 print()
 print()
 print()
 print()
 
-for token in my_token_list:
+while True:
+    token = my_tokenizer.get_next_token()
+    if token.token == "EOF":
+        break
     print("< " + token.token + ", " + token.lexeme + " >  b/w indices " + str(token.begin) + " to " + str(token.end) + " on line number " + str(token.line))

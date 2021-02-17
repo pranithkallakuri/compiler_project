@@ -1,5 +1,5 @@
 # Python 3.8.5 64-bit
-# Written By -- Pranith S Kallakuri 
+
 class Token:
     token = ""
     lexeme = ""
@@ -35,6 +35,20 @@ class Tokenizer:
         ',' : "delim_comma"
     }
     token_list = []
+    filename = ""
+
+    def __init__(self, filename):
+        self.filename = filename
+        self.get_token_list(self.filename)
+
+    def get_next_token(self):
+        if len(self.token_list) == 0:
+            return Token("EOF", "EOF", -1, -1, -1)
+        tok = self.token_list[0]
+        print(tok.token)
+        self.token_list.pop(0)
+        return tok
+
     def get_token_list(self, filename):
         file = open(filename, 'r')
         line_number = 1
@@ -52,7 +66,6 @@ class Tokenizer:
             if self.in_singleline_comment:
                 self.in_singleline_comment = False              # Moving to next line if current is singleline comment
             #break
-        return self.token_list
     
     def get_tokens(self, chars, line_number):
         self.lb = 0
