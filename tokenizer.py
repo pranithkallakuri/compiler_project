@@ -1,5 +1,9 @@
 # Python 3.8.5 64-bit
+<<<<<<< HEAD
 # Written By -- Pranith S Kallakuri 
+=======
+
+>>>>>>> 382ad2cc694d99a08aa2061bcb9b13f5ecccab94
 class Token:
     token = ""
     lexeme = ""
@@ -35,6 +39,25 @@ class Tokenizer:
         ',' : "delim_comma"
     }
     token_list = []
+<<<<<<< HEAD
+=======
+    filename = ""
+    error_state =""
+    string_flag=0
+
+    def __init__(self, filename):
+        self.filename = filename
+        self.get_token_list(self.filename)
+
+    def get_next_token(self):
+        if len(self.token_list) == 0:
+            return Token("EOF", "EOF", -1, -1, -1)
+        tok = self.token_list[0]
+        print(tok.token)
+        self.token_list.pop(0)
+        return tok
+
+>>>>>>> 382ad2cc694d99a08aa2061bcb9b13f5ecccab94
     def get_token_list(self, filename):
         file = open(filename, 'r')
         line_number = 1
@@ -52,13 +75,20 @@ class Tokenizer:
             if self.in_singleline_comment:
                 self.in_singleline_comment = False              # Moving to next line if current is singleline comment
             #break
+<<<<<<< HEAD
         return self.token_list
+=======
+>>>>>>> 382ad2cc694d99a08aa2061bcb9b13f5ecccab94
     
     def get_tokens(self, chars, line_number):
         self.lb = 0
         self.fp = 0
         is_final_state = False       
         while self.fp < len(chars):
+<<<<<<< HEAD
+=======
+            self.string_flag = 0
+>>>>>>> 382ad2cc694d99a08aa2061bcb9b13f5ecccab94
             if not self.in_multiline_comment:
                 self.state, is_final_state = self.change_state(chars[self.fp], chars)
             print(self.lb, self.fp, chr(chars[self.fp])) ##
@@ -73,6 +103,20 @@ class Tokenizer:
                     continue
             if self.in_singleline_comment:
                 return
+<<<<<<< HEAD
+=======
+            if self.state == "Error":
+                lexeme_ = str(''.join(chr(chars[i]) for i in range(self.lb, self.fp+1)))
+                self.token_list.append(Token(self.error_state, lexeme_, self.lb, self.fp, line_number))
+                self.previous_final_state = self.state
+                is_final_state = False
+                if self.string_flag == 1:
+                    self.state = "str0"
+                else:
+                    self.state = "start"
+                self.lb = self.fp+1
+
+>>>>>>> 382ad2cc694d99a08aa2061bcb9b13f5ecccab94
             if is_final_state and not self.in_multiline_comment:
                 lexeme_ = str(''.join(chr(chars[i]) for i in range(self.lb, self.fp+1)))
                 self.token_list.append(Token(self.state, lexeme_, self.lb, self.fp, line_number))
@@ -105,6 +149,10 @@ class Tokenizer:
     def change_state(self, char, chars):
         is_final_state = False
         if self.state == "start":
+<<<<<<< HEAD
+=======
+            self.error_state = "char_error"
+>>>>>>> 382ad2cc694d99a08aa2061bcb9b13f5ecccab94
             print("inhere1")
             if char == ord('\n') or char == ord('\t') or char == ord(' '):
                 self.lb = self.fp+1
@@ -239,6 +287,12 @@ class Tokenizer:
             if chr(char) in ['"', '\\', 'n', 'r', 't']:
                 self.state = "str2"
                 return self.state, is_final_state
+<<<<<<< HEAD
+=======
+            else:
+                self.error_state = "string_error"
+                self.string_flag=1
+>>>>>>> 382ad2cc694d99a08aa2061bcb9b13f5ecccab94
 
         elif self.state == "str2":
             print("inhere4")
@@ -290,6 +344,11 @@ class Tokenizer:
                 else:
                     is_final_state = True
                     return self.state, is_final_state
+<<<<<<< HEAD
+=======
+            else:
+                self.error_state = "float_error"
+>>>>>>> 382ad2cc694d99a08aa2061bcb9b13f5ecccab94
 
         elif self.state == "float_literal":
             print("inhere6.1")
