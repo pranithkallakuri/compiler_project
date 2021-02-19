@@ -10,26 +10,12 @@ if len(sys.argv) < 2:
     exit()
 
 
-<<<<<<< HEAD
-my_tokenizer = Tokenizer()
-my_token_list = my_tokenizer.get_token_list(sys.argv[1])
-=======
 my_tokenizer = Tokenizer(sys.argv[1])
->>>>>>> 382ad2cc694d99a08aa2061bcb9b13f5ecccab94
-
 print()
-print()
-print()
-print()
-
-<<<<<<< HEAD
-for token in my_token_list:
-=======
 while True:
     token = my_tokenizer.get_next_token()
     if token.token == "EOF":
         break
-    if token.token == "string_error" or token.token=="char_error" or token.token=="float_error" :
-        print("Error encountered at line"+str(token.line))
->>>>>>> 382ad2cc694d99a08aa2061bcb9b13f5ecccab94
+    if token.token == "string_error" or token.token=="char_error" or token.token=="float_error" or token.token == "Invalid_Token" :
+        print("Error encountered at line " + str(token.line))
     print("< " + token.token + ", " + token.lexeme + " >  b/w indices " + str(token.begin) + " to " + str(token.end) + " on line number " + str(token.line))
