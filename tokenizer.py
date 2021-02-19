@@ -36,6 +36,9 @@ class Tokenizer:
     }
     token_list = []
     filename = ""
+    error_state =""
+    string_flag=0
+
 
     def __init__(self, filename):
         self.filename = filename
@@ -45,7 +48,6 @@ class Tokenizer:
         if len(self.token_list) == 0:
             return Token("EOF", "EOF", -1, -1, -1)
         tok = self.token_list[0]
-        print(tok.token)
         self.token_list.pop(0)
         return tok
 
@@ -56,10 +58,10 @@ class Tokenizer:
             ascii_list = [ord(line[i]) for i in range(len(line))]
             if ascii_list[-1] == 10:
                 ascii_list.pop()
-            print()
-            print(ascii_list)
-            print(line)
-            print()
+            # print()
+            # print(ascii_list)
+            # print(line)
+            # print()
             self.state = "start"
             self.get_tokens(ascii_list, line_number)
             line_number += 1
@@ -72,20 +74,32 @@ class Tokenizer:
         self.fp = 0
         is_final_state = False       
         while self.fp < len(chars):
+            self.string_flag = 0
             if not self.in_multiline_comment:
                 self.state, is_final_state = self.change_state(chars[self.fp], chars)
-            print(self.lb, self.fp, chr(chars[self.fp])) ##
-            print(self.state, is_final_state)
-            print("singlecomm = " + str(self.in_singleline_comment) + " " + "multicomm=" + str(self.in_multiline_comment))
+            # print(self.lb, self.fp, chr(chars[self.fp])) ##
+            # print(self.state, is_final_state)
+            # print("singlecomm = " + str(self.in_singleline_comment) + " " + "multicomm=" + str(self.in_multiline_comment))
             if self.in_multiline_comment:
                 q = self.is_completely_multiline_comment(chars) 
-                print(q)                        # Handling Multiline comment
+                # print(q)                        # Handling Multiline comment
                 if q:
                     return
                 else:
                     continue
             if self.in_singleline_comment:
                 return
+            if self.state == "Error":
+                lexeme_ = str(''.join(chr(chars[i]) for i in range(self.lb, self.fp+1)))
+                self.token_list.append(Token(self.error_state, lexeme_, self.lb, self.fp, line_number))
+                self.previous_final_state = self.state
+                is_final_state = False
+                if self.string_flag == 1:
+                    self.state = "str0"
+                else:
+                    self.state = "start"
+                self.lb = self.fp+1
+
             if is_final_state and not self.in_multiline_comment:
                 lexeme_ = str(''.join(chr(chars[i]) for i in range(self.lb, self.fp+1)))
                 self.token_list.append(Token(self.state, lexeme_, self.lb, self.fp, line_number))
@@ -97,17 +111,19 @@ class Tokenizer:
                 
 
         if not self.in_multiline_comment and self.lb != self.fp:
-            print("Error")
+            # print("Error")
+            lexeme_ = str(''.join(chr(chars[i]) for i in range(self.lb, self.fp)))
+            self.token_list.append(Token("Invalid_Token", lexeme_, self.lb, self.fp, line_number))
 
     def is_completely_multiline_comment(self, chars):
         while self.fp < len(chars):
             if chars[self.fp] == ord('*'):
                 self.fp += 1
-                print("are you failing multi")
+                # print("are you failing multi")
                 if self.fp < len(chars) and chars[self.fp] == ord('/'):
                     self.fp = self.fp+1 
                     self.lb = self.fp
-                    print("Changing multiline")
+                    # print("Changing multiline")
                     self.in_multiline_comment = False
                     return False
                 else:
@@ -118,7 +134,8 @@ class Tokenizer:
     def change_state(self, char, chars):
         is_final_state = False
         if self.state == "start":
-            print("inhere1")
+            self.error_state = "char_error"
+            # print("inhere1")
             if char == ord('\n') or char == ord('\t') or char == ord(' '):
                 self.lb = self.fp+1
                 return self.state, is_final_state
@@ -201,28 +218,28 @@ class Tokenizer:
                 return self.state, is_final_state
 
         elif self.state == "id":
-            print("inhere1.1", chr(char), char)
+            # print("inhere1.1", chr(char), char)
             if chr(char).isalnum() or char == ord('_'):
                 if self.fp+1 < len(chars) and (chr(chars[self.fp+1]).isalnum() or chars[self.fp+1] == ord('_')):
                     return self.state, is_final_state
                 else:
                     is_final_state = True
                     incomplete_lexeme = str(''.join(chr(chars[i]) for i in range(self.lb, self.fp+1)))
-                    print(incomplete_lexeme)
+                    # print(incomplete_lexeme)
                     if incomplete_lexeme in self.keywords:
-                        print("what about here?")
+                        # print("what about here?")
                         self.state = "keyword"
                         return self.state, is_final_state
                     return self.state, is_final_state
 
         elif self.state == "intf0":
-            print("inhere1.2")
+            # print("inhere1.2")
             if char == ord('.'):
                 self.state = "float0"
                 return self.state, is_final_state
 
         elif self.state == "intf1":
-            print("inhere1.3")
+            # print("inhere1.3")
             if chr(char).isdigit():
                 if self.fp+1 < len(chars) and (chr(chars[self.fp+1]).isdigit() or chars[self.fp+1] == ord('.')):
                         return self.state, is_final_state
@@ -235,7 +252,7 @@ class Tokenizer:
                 return self.state, is_final_state
 
         elif self.state == "str0":
-            print("inhere2")
+            # print("inhere2")
             if char == ord('\\'):
                 self.state = "str1"
                 return self.state, is_final_state
@@ -248,13 +265,16 @@ class Tokenizer:
                 return self.state, is_final_state
 
         elif self.state == "str1":
-            print("inhere3")
+            # print("inhere3")
             if chr(char) in ['"', '\\', 'n', 'r', 't']:
                 self.state = "str2"
                 return self.state, is_final_state
+            else:
+                self.error_state = "string_error"
+                self.string_flag=1
 
         elif self.state == "str2":
-            print("inhere4")
+            # print("inhere4")
             if char == ord('"'):
                 self.state = "string_literal"
                 is_final_state = True
@@ -266,15 +286,15 @@ class Tokenizer:
                 return self.state, is_final_state
         
         elif self.state == "int0":
-            print("inhere5")
-            print("char = " + str(chr(char)))
+            # print("inhere5")
+            # print("char = " + str(chr(char)))
             if chr(char).isdigit() and not char == ord('0'):
-                print("inhere5->1")
+                # print("inhere5->1")
                 self.state = "intf1"
                 if self.fp+1 < len(chars) and chr(chars[self.fp+1]).isdigit():
                     return self.state, is_final_state
                 else:
-                    print(chars[self.fp+1] == ord('.'))
+                    # print(chars[self.fp+1] == ord('.'))
                     if chars[self.fp+1] == ord('.'):
                         return self.state, is_final_state
                     else:
@@ -289,13 +309,13 @@ class Tokenizer:
                 return self.state, is_final_state
 
         elif self.state == "int1":
-            print("inhere6")
+            # print("inhere6")
             if char == ord('.'):
                 self.state = "float0"
                 return self.state, is_final_state
 
         elif self.state == "float0":
-            print("inhere6")
+            # print("inhere6")
             if chr(char).isdigit():
                 self.state = "float_literal"
                 if self.fp+1 < len(chars) and chr(chars[self.fp+1]).isdigit():
@@ -303,9 +323,11 @@ class Tokenizer:
                 else:
                     is_final_state = True
                     return self.state, is_final_state
+            else:
+                self.error_state = "float_error"
 
         elif self.state == "float_literal":
-            print("inhere6.1")
+            # print("inhere6.1")
             if chr(char).isdigit():
                 if self.fp+1 < len(chars) and chr(chars[self.fp+1]).isdigit():
                     return self.state, is_final_state
@@ -314,7 +336,7 @@ class Tokenizer:
                     return self.state, is_final_state
 
         elif self.state == "ocom0":
-            print("inhere7")
+            # print("inhere7")
             if char == ord('*'):
                 self.state = "multilinecommentopen"
                 self.in_multiline_comment = True
@@ -332,7 +354,7 @@ class Tokenizer:
                 return self.state, is_final_state
 
         elif self.state == "eq0":
-            print("inhere8")
+            # print("inhere8")
             if char == ord('='):
                 self.state = "relop_eq"
                 is_final_state = True
@@ -344,7 +366,7 @@ class Tokenizer:
                 return self.state, is_final_state
         
         elif self.state == "col0":
-            print("inhere9")
+            # print("inhere9")
             if char == ord('='):
                 self.state = "op_assign2"
                 is_final_state = True
@@ -355,7 +377,7 @@ class Tokenizer:
                 return self.state, is_final_state
 
         elif self.state == "lt0":
-            print("inhere10")
+            # print("inhere10")
             if char == ord('='):
                 self.state = "relop_le"
                 is_final_state = True
@@ -367,7 +389,7 @@ class Tokenizer:
                 return self.state, is_final_state
 
         elif self.state == "not0":
-            print("inhere11")
+            # print("inhere11")
             if char == ord('='):
                 self.state = "relop_ne"
                 is_final_state = True
@@ -379,7 +401,7 @@ class Tokenizer:
                 return self.state, is_final_state
 
         elif self.state == "gt0":
-            print("inhere12")
+            # print("inhere12")
             if char == ord('='):
                 self.state = "relop_ge"
                 is_final_state = True
@@ -391,14 +413,14 @@ class Tokenizer:
                 return self.state, is_final_state
 
         elif self.state == "and0":
-            print("inhere13")
+            # print("inhere13")
             if char == ord('&'):
                 self.state = "logical_and"
                 is_final_state = True
                 return self.state, is_final_state
 
         elif self.state == "or0":
-            print("inhere14")
+            # print("inhere14")
             if char == ord('|'):
                 self.state = "logical_or"
                 is_final_state = True
