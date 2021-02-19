@@ -1,4 +1,4 @@
-#Python 3.8.5 64-bit
+#Python 3.9.1 64-bit
 
 import sys      # This import is required to use commandline argument for filename to be lexed. 
 from tokenizer import Tokenizer, Token
