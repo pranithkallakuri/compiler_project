@@ -1,4 +1,5 @@
 # Python 3.8.5 64-bit
+
 class Token:
     token = ""
     lexeme = ""
@@ -38,6 +39,7 @@ class Tokenizer:
     error_state =""
     string_flag=0
 
+
     def __init__(self, filename):
         self.filename = filename
         self.get_token_list(self.filename)
@@ -46,7 +48,6 @@ class Tokenizer:
         if len(self.token_list) == 0:
             return Token("EOF", "EOF", -1, -1, -1)
         tok = self.token_list[0]
-        # print(tok.token)
         self.token_list.pop(0)
         return tok
 

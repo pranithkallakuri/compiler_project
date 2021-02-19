@@ -1,5 +1,4 @@
 #Python 3.8.5 64-bit
-#Written by Pranith S Kallakuri
 
 import sys      # This import is required to use commandline argument for filename to be lexed. 
 from tokenizer import Tokenizer, Token
@@ -11,7 +10,9 @@ if len(sys.argv) < 2:
 
 
 my_tokenizer = Tokenizer(sys.argv[1])
+
 print()
+
 while True:
     token = my_tokenizer.get_next_token()
     if token.token == "EOF":
