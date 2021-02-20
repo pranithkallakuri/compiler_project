@@ -1,3 +1,9 @@
+# TEAM MEMBERS                   - G69
+# PRANITH S KALLAKURI            - 2018A7PS0249H
+# DANTULURI SAIRAJU              - 2018A7PS0306H
+# GOLLA SAI VENKAT GOWTHAM       - 2018A7PS0991H
+# NITIN GOPALA KRISHNA SONTINENI - 2018A7PS0262H
+
 
 import sys                                # This import is required to use commandline argument for filename to be lexed. 
 from tokenizer import Tokenizer, Token    # Importing the Tokenizer class custom written by us (the team)

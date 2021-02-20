@@ -1,3 +1,9 @@
+# TEAM MEMBERS                   - G69
+# PRANITH S KALLAKURI            - 2018A7PS0249H
+# DANTULURI SAIRAJU              - 2018A7PS0306H
+# GOLLA SAI VENKAT GOWTHAM       - 2018A7PS0991H
+# NITIN GOPALA KRISHNA SONTINENI - 2018A7PS0262H
+
 
 # Wrapper class for an identified token 
 class Token:
@@ -64,7 +70,7 @@ class Tokenizer:
             # print(ascii_list)
             # print(line)
             # print()
-            self.state = "start"                                   # Reset start state to "start" at the beginning of each line buffer
+            self.state = "start"                                   # Reset start state to "start" at the beginning of each line buffer                                
             self.get_tokens(ascii_list, line_number)
             line_number += 1
             if self.in_singleline_comment:
@@ -133,11 +139,6 @@ class Tokenizer:
             self.fp += 1
         return True
 
-    '''
-    ################################################################################################################################
-        Note: See pictures of DFA added to this submission zip file. We have followed the same here, including same state names.
-    ################################################################################################################################
-    '''
 
     def change_state(self, char, chars):                               # Method that changes the current state in DFA
         is_final_state = False
@@ -172,10 +173,15 @@ class Tokenizer:
                 self.state = "or0"
                 return self.state, is_final_state
             elif char == ord('+') or char == ord('-'):
-                if self.previous_final_state in ["integer_literal", "float_literal", "id"]:
-                    state = "op_add" if char == ord('+') else "op_sub"
+                #print((self.fp+1 < len(chars)) and ((chars[self.fp+1]-48) not in range(1, 10)))
+                if self.previous_final_state in ["integer_literal", "float_literal", "id", "string_literal"]:
+                    self.state = "op_add" if char == ord('+') else "op_sub"
                     is_final_state = True
-                    return state, is_final_state
+                    return self.state, is_final_state
+                elif (self.fp+1 < len(chars)) and ((chars[self.fp+1]-48) not in range(1, 10)):
+                    self.state = "op_add" if char == ord('+') else "op_sub"
+                    is_final_state = True
+                    return self.state, is_final_state
                 else:
                     self.state = "int0"
                     return self.state, is_final_state
@@ -315,6 +321,9 @@ class Tokenizer:
             elif char == ord('0'):
                 self.state = "int1"
                 return self.state, is_final_state
+            else:
+                self.retract()
+                return "Error", False
 
         elif self.state == "int1":                                     # If current state of DFA is "int1"
             # print("inhere6")
