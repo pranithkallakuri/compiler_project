@@ -275,7 +275,7 @@ class Tokenizer:
                 self.state = "str1"
                 return self.state, is_final_state
             elif char == ord('"'):
-                self.state == "string_literal"
+                self.state = "string_literal"
                 is_final_state = True
                 return self.state, is_final_state
             else:
