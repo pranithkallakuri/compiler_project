@@ -1,11 +1,11 @@
-#Python 3.9.1 64-bit
 
+# Wrapper class for an identified token 
 class Token:
-    token = ""
-    lexeme = ""
-    begin = 0
-    end = 0
-    line = 0
+    token = ""                                                # Contains the TK_identifier
+    lexeme = ""                                               # Contains the actual lexeme
+    begin = 0                                                 # Contains the start index of lexeme 
+    end = 0                                                   # Contains end index of lexeme
+    line = 0                                                  # Contains line number of lexeme
     def __init__(self, token_type, lexeme, begin, end, line):
         self.token = token_type
         self.lexeme = lexeme
@@ -14,14 +14,15 @@ class Token:
         self.line = line
 
 class Tokenizer:
-    in_singleline_comment = False
-    in_multiline_comment = False
-    state = "start"
-    previous_final_state = "start"
-    lb = 0
-    fp = 0
+    in_singleline_comment = False                          # Bool that keeps track whether currently pointer is in single line comment
+    in_multiline_comment = False                           # Keeps track whether pointer in multiline comment
+    state = "start"                                        # Keeps track of DFA state
+    previous_final_state = "start"                         # Keeps track of previously found valid Token
+    lb = 0                                                 # lb -> lexeme beginning pointer
+    fp = 0                                                 # fp -> forward pointer 
     
-    keywords = ['int', 'float', 'boolean', 'string', 'while', 'until', 'if', 'else', 'true', 'false']
+    # List of keywords, operators and delimiters to which we match
+    keywords = ['int', 'float', 'boolean', 'string', 'while', 'until', 'if', 'else', 'true', 'false', 'print']
     operators = ['+', '-', '*', '/', '%', ':=', '=', '==', '>', '<', '>=', '<=', '!=', '&&', '||', '!', '?', ':']
     delimiters = ['{', '}', '(', ')', '[', ']', ';', ',']
     delimiter_token = {
@@ -44,7 +45,7 @@ class Tokenizer:
         self.filename = filename
         self.get_token_list(self.filename)
 
-    def get_next_token(self):
+    def get_next_token(self):                                       # Returns next token from the token-list
         if len(self.token_list) == 0:
             return Token("EOF", "EOF", -1, -1, -1)
         tok = self.token_list[0]
@@ -54,6 +55,7 @@ class Tokenizer:
     def get_token_list(self, filename):
         file = open(filename, 'r')
         line_number = 1
+        # Take each line of file in a buffer
         for line in file:
             ascii_list = [ord(line[i]) for i in range(len(line))]
             if ascii_list[-1] == 10:
@@ -62,11 +64,11 @@ class Tokenizer:
             # print(ascii_list)
             # print(line)
             # print()
-            self.state = "start"
+            self.state = "start"                                   # Reset start state to "start" at the beginning of each line buffer
             self.get_tokens(ascii_list, line_number)
             line_number += 1
             if self.in_singleline_comment:
-                self.in_singleline_comment = False              # Moving to next line if current is singleline comment
+                self.in_singleline_comment = False                 # Moving to next line if current is singleline comment
             #break
     
     def get_tokens(self, chars, line_number):
@@ -81,15 +83,15 @@ class Tokenizer:
             # print(self.state, is_final_state)
             # print("singlecomm = " + str(self.in_singleline_comment) + " " + "multicomm=" + str(self.in_multiline_comment))
             if self.in_multiline_comment:
-                q = self.is_completely_multiline_comment(chars) 
-                # print(q)                        # Handling Multiline comment
+                q = self.is_completely_multiline_comment(chars)        # Handling Multiline comment
+                # print(q)
                 if q:
                     return
                 else:
                     continue
-            if self.in_singleline_comment:
+            if self.in_singleline_comment:                             # Skip current line iteration if in single-line comment
                 return
-            if self.state == "Error":
+            if self.state == "Error":                                  # Store Error Token
                 lexeme_ = str(''.join(chr(chars[i]) for i in range(self.lb, self.fp+1)))
                 self.token_list.append(Token(self.error_state, lexeme_, self.lb, self.fp, line_number))
                 self.previous_final_state = self.state
@@ -100,7 +102,7 @@ class Tokenizer:
                     self.state = "start"
                 self.lb = self.fp+1
 
-            if is_final_state and not self.in_multiline_comment:
+            if is_final_state and not self.in_multiline_comment:       # Store the successfully found lexeme
                 lexeme_ = str(''.join(chr(chars[i]) for i in range(self.lb, self.fp+1)))
                 self.token_list.append(Token(self.state, lexeme_, self.lb, self.fp, line_number))
                 self.previous_final_state = self.state
@@ -110,12 +112,12 @@ class Tokenizer:
             self.fp += 1
                 
 
-        if not self.in_multiline_comment and self.lb != self.fp:
+        if not self.in_multiline_comment and self.lb != self.fp:       # If line ends in incomplete lexeme, throw "Invalid_Error" Error and store
             # print("Error")
             lexeme_ = str(''.join(chr(chars[i]) for i in range(self.lb, self.fp)))
             self.token_list.append(Token("Invalid_Token", lexeme_, self.lb, self.fp, line_number))
 
-    def is_completely_multiline_comment(self, chars):
+    def is_completely_multiline_comment(self, chars):                 # Iterate fp until end of multiline comment
         while self.fp < len(chars):
             if chars[self.fp] == ord('*'):
                 self.fp += 1
@@ -131,11 +133,17 @@ class Tokenizer:
             self.fp += 1
         return True
 
-    def change_state(self, char, chars):
+    '''
+    ################################################################################################################################
+        Note: See pictures of DFA added to this submission zip file. We have followed the same here, including same state names.
+    ################################################################################################################################
+    '''
+
+    def change_state(self, char, chars):                               # Method that changes the current state in DFA
         is_final_state = False
-        if self.state == "start":
+        if self.state == "start":                                      # If current state of DFA is "start"
             self.error_state = "char_error"
-            # print("inhere1")
+            # print("inhere1")                                         # Below are multiple possible state changes
             if char == ord('\n') or char == ord('\t') or char == ord(' '):
                 self.lb = self.fp+1
                 return self.state, is_final_state
@@ -217,7 +225,7 @@ class Tokenizer:
                 is_final_state = True
                 return self.state, is_final_state
 
-        elif self.state == "id":
+        elif self.state == "id":                                          # If current state of DFA is "id"
             # print("inhere1.1", chr(char), char)
             if chr(char).isalnum() or char == ord('_'):
                 if self.fp+1 < len(chars) and (chr(chars[self.fp+1]).isalnum() or chars[self.fp+1] == ord('_')):
@@ -232,13 +240,13 @@ class Tokenizer:
                         return self.state, is_final_state
                     return self.state, is_final_state
 
-        elif self.state == "intf0":
+        elif self.state == "intf0":                                       # If current state of DFA is "intf0"
             # print("inhere1.2")
             if char == ord('.'):
                 self.state = "float0"
                 return self.state, is_final_state
 
-        elif self.state == "intf1":
+        elif self.state == "intf1":                                       # If current state of DFA is "intf1"
             # print("inhere1.3")
             if chr(char).isdigit():
                 if self.fp+1 < len(chars) and (chr(chars[self.fp+1]).isdigit() or chars[self.fp+1] == ord('.')):
@@ -251,7 +259,7 @@ class Tokenizer:
                 self.state = "float0"
                 return self.state, is_final_state
 
-        elif self.state == "str0":
+        elif self.state == "str0":                                        # If current state of DFA is "str0"
             # print("inhere2")
             if char == ord('\\'):
                 self.state = "str1"
@@ -264,7 +272,7 @@ class Tokenizer:
                 self.state = "str2"
                 return self.state, is_final_state
 
-        elif self.state == "str1":
+        elif self.state == "str1":                                        # If current state of DFA is "str1"
             # print("inhere3")
             if chr(char) in ['"', '\\', 'n', 'r', 't']:
                 self.state = "str2"
@@ -285,7 +293,7 @@ class Tokenizer:
             else:
                 return self.state, is_final_state
         
-        elif self.state == "int0":
+        elif self.state == "int0":                                     # If current state of DFA is "int0"
             # print("inhere5")
             # print("char = " + str(chr(char)))
             if chr(char).isdigit() and not char == ord('0'):
@@ -308,13 +316,13 @@ class Tokenizer:
                 self.state = "int1"
                 return self.state, is_final_state
 
-        elif self.state == "int1":
+        elif self.state == "int1":                                     # If current state of DFA is "int1"
             # print("inhere6")
             if char == ord('.'):
                 self.state = "float0"
                 return self.state, is_final_state
 
-        elif self.state == "float0":
+        elif self.state == "float0":                                   # If current state of DFA is "float0"
             # print("inhere6")
             if chr(char).isdigit():
                 self.state = "float_literal"
@@ -326,7 +334,7 @@ class Tokenizer:
             else:
                 self.error_state = "float_error"
 
-        elif self.state == "float_literal":
+        elif self.state == "float_literal":                            # If current state of DFA is "float_literal"
             # print("inhere6.1")
             if chr(char).isdigit():
                 if self.fp+1 < len(chars) and chr(chars[self.fp+1]).isdigit():
@@ -335,7 +343,7 @@ class Tokenizer:
                     is_final_state = True
                     return self.state, is_final_state
 
-        elif self.state == "ocom0":
+        elif self.state == "ocom0":                                    # If current state of DFA is "ocom0"
             # print("inhere7")
             if char == ord('*'):
                 self.state = "multilinecommentopen"
@@ -353,7 +361,7 @@ class Tokenizer:
                 is_final_state = True
                 return self.state, is_final_state
 
-        elif self.state == "eq0":
+        elif self.state == "eq0":                                      # If current state of DFA is "eq0"
             # print("inhere8")
             if char == ord('='):
                 self.state = "relop_eq"
@@ -365,7 +373,7 @@ class Tokenizer:
                 is_final_state = True
                 return self.state, is_final_state
         
-        elif self.state == "col0":
+        elif self.state == "col0":                                     # If current state of DFA is "col0"
             # print("inhere9")
             if char == ord('='):
                 self.state = "op_assign2"
@@ -376,7 +384,7 @@ class Tokenizer:
                 self.state = "op_colon"
                 return self.state, is_final_state
 
-        elif self.state == "lt0":
+        elif self.state == "lt0":                                      # If current state of DFA is "lt0"
             # print("inhere10")
             if char == ord('='):
                 self.state = "relop_le"
@@ -388,7 +396,7 @@ class Tokenizer:
                 is_final_state = True
                 return self.state, is_final_state
 
-        elif self.state == "not0":
+        elif self.state == "not0":                                      # If current state of DFA is "not0"
             # print("inhere11")
             if char == ord('='):
                 self.state = "relop_ne"
@@ -400,7 +408,7 @@ class Tokenizer:
                 is_final_state = True
                 return self.state, is_final_state
 
-        elif self.state == "gt0":
+        elif self.state == "gt0":                                       # If current state of DFA is "gt0"
             # print("inhere12")
             if char == ord('='):
                 self.state = "relop_ge"
@@ -412,32 +420,24 @@ class Tokenizer:
                 is_final_state = True
                 return self.state, is_final_state
 
-        elif self.state == "and0":
+        elif self.state == "and0":                                       # If current state of DFA is "and0"
             # print("inhere13")
             if char == ord('&'):
                 self.state = "logical_and"
                 is_final_state = True
                 return self.state, is_final_state
 
-        elif self.state == "or0":
+        elif self.state == "or0":                                        # If current state of DFA is "or0"
             # print("inhere14")
             if char == ord('|'):
                 self.state = "logical_or"
                 is_final_state = True
                 return self.state, is_final_state
         
-        self.state = "Error"
-        return self.state, is_final_state
+        self.state = "Error"                                             # If none DFA in none of the above state,..
+        return self.state, is_final_state                                # ...move to sink state which is an "Error"
                 
-    def retract(self):
-        self.fp -= 1
+    def retract(self):                                                   # Retract method that decrements (retracts)...
+        self.fp -= 1                                                     # ...fp by one.
 
         
-
-# test_tokenizer = Tokenizer()
-# my_token_list = test_tokenizer.get_token_list('sample.txt')
-# print()
-# print()
-# print()
-# for token in my_token_list:
-#     print("< " + token.token + ", " + token.lexeme + " >")
