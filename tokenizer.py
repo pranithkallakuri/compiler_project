@@ -179,9 +179,13 @@ class Tokenizer:
                     is_final_state = True
                     return self.state, is_final_state
                 elif (self.fp+1 < len(chars)) and ((chars[self.fp+1]-48) not in range(1, 10)):
-                    self.state = "op_add" if char == ord('+') else "op_sub"
-                    is_final_state = True
-                    return self.state, is_final_state
+                    if (self.fp+2 < len(chars)) and chars[self.fp+1] == ord('0') and chars[self.fp+2] == ord('.'):
+                        self.state = "int0"
+                        return self.state, False
+                    else:
+                        self.state = "op_add" if char == ord('+') else "op_sub"
+                        is_final_state = True
+                        return self.state, is_final_state
                 else:
                     self.state = "int0"
                     return self.state, is_final_state
